@@ -1,7 +1,7 @@
 import requests
 from playwright.sync_api import sync_playwright
 
-NTFY_TOPIC = "galway_ps5_alert_9921"  
+NTFY_TOPIC = "galway_ps5_alert_9921"  # Must match your ntfy app topic
 
 SMYTHS_URLS = {
     "PS5 Slim Disc Standalone (232873)": "https://smythstoys.com",
@@ -22,16 +22,22 @@ TARGET_STORES = [
 
 
 def send_alert(title: str, message: str, url: str, urgent: bool = True):
-    requests.post(
-        f"https://ntfy.sh{NTFY_TOPIC}",
-        data=message.encode("utf-8"),
-        headers={
-            "Title": title,
-            "Priority": "urgent" if urgent else "low",
-            "Click": url,
-        },
-        timeout=15,
-    )
+    """Sends a push notification via ntfy.sh with proper slash and error handling."""
+    try:
+        resp = requests.post(
+            f"https://ntfy.sh{NTFY_TOPIC}",
+            data=message.encode("utf-8"),
+            headers={
+                "Title": title,
+                "Priority": "urgent" if urgent else "low",
+                "Click": url,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        print(f"[ALERT SENT] {title}")
+    except Exception as e:
+        print(f"[ALERT FAILED] {e}")
 
 
 def main():
@@ -77,11 +83,11 @@ def main():
                 verified_pages += 1
                 print(f"[VERIFIED] Loaded desktop page for {name}")
 
-                
+                # 1. Home Delivery check
                 if "add to basket" in body_text and "home delivery out of stock" not in body_text and "out of stock" not in body_text:
                     hits.append((f"[HOME DELIVERY] {name}", url))
 
-              
+                # 2. Click & Collect store modal check
                 stock_selectors = [
                     "button:has-text('Check Stock')",
                     "a:has-text('Check Stock')",
