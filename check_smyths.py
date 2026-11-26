@@ -25,7 +25,7 @@ def send_alert(title: str, message: str, url: str, urgent: bool = True):
     """Sends a push notification via ntfy.sh with proper slash and error handling."""
     try:
         resp = requests.post(
-            f"https://ntfy.sh{NTFY_TOPIC}",
+            f"https://ntfy.sh/" + NTFY_TOPIC,
             data=message.encode("utf-8"),
             headers={
                 "Title": title,
